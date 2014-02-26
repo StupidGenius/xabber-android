@@ -14,10 +14,6 @@
 
 package com.xabber.android.data;
 
-import android.os.Build;
-import android.os.Process;
-import android.util.Log;
-
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -27,12 +23,15 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Field;
 import java.security.NoSuchAlgorithmException;
 import java.security.Provider;
 import java.security.SecureRandom;
 import java.security.SecureRandomSpi;
 import java.security.Security;
+
+import android.os.Build;
+import android.os.Process;
+import android.util.Log;
 
 /**
  * Fixes for the output of the default PRNG having low entropy.
@@ -68,8 +67,8 @@ public final class PRNGFixes {
      * @throws SecurityException if the fix is needed but could not be applied.
      */
     private static void applyOpenSSLFix() throws SecurityException {
-        if ((getSdkInt() < VERSION_CODE_JELLY_BEAN)
-                || (getSdkInt() > VERSION_CODE_JELLY_BEAN_MR2)) {
+        if ((Build.VERSION.SDK_INT < VERSION_CODE_JELLY_BEAN)
+                || (Build.VERSION.SDK_INT > VERSION_CODE_JELLY_BEAN_MR2)) {
             // No need to apply the fix
             return;
         }
@@ -104,7 +103,7 @@ public final class PRNGFixes {
      */
     private static void installLinuxPRNGSecureRandom()
             throws SecurityException {
-        if (getSdkInt() > VERSION_CODE_JELLY_BEAN_MR2) {
+        if (Build.VERSION.SDK_INT > VERSION_CODE_JELLY_BEAN_MR2) {
             // No need to apply the fix
             return;
         }
@@ -336,20 +335,6 @@ public final class PRNGFixes {
             return result.toString().getBytes("UTF-8");
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException("UTF-8 encoding not supported");
-        }
-    }
-
-    private static int getSdkInt() {
-        // SDK_INT is available from API level 4, but Xabber manifest declares
-        // minimal level to 3, so we need to use reflection.
-        try {
-            Class buildVersion = Class.forName("android.os.Build$VERSION");
-            Field sdkInt = buildVersion.getField("SDK_INT");
-            return sdkInt.getInt(null);
-        } catch (Exception e) {
-            // ClassNotFoundException and IllegalAccessException shouln't happen
-            // NoSuchFieldException in case SDK_INT < 4
-            return 3;
         }
     }
 }
